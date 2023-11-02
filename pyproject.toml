@@ -9,6 +9,3 @@ dependencies = [
 
 [tool.setuptools]
 packages = ["omniapy"]
-
-[project.scripts]
-gaia = "omniapy:__main__.app"
