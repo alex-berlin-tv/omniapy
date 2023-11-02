@@ -1,8 +1,9 @@
-from .model import ApiType, Response, StreamType
+import logging
+from .model import ApiType, EditableAttributesResponse, MediaResultItem, Response, ResponseType, StreamType
 
 import hashlib
 from logging import Logger
-from typing import Optional
+from typing import Any, Optional, Type
 
 import requests
 
@@ -17,7 +18,7 @@ class Omnia:
         domain_id: str,
         api_secret: str,
         session_id: str,
-        logger: Logger,
+        logger: Logger = logging.getLogger(),
     ):
         self.domain_id = domain_id
         self.api_secret = api_secret
@@ -29,7 +30,7 @@ class Omnia:
         stream_type: StreamType,
         item_id: int,
         parameters: dict[str, str] = {},
-    ):
+    ) -> Response[MediaResultItem]:
         """Return a item of a given stream type by it's id."""
         return self.call(
             "get",
@@ -38,6 +39,7 @@ class Omnia:
             "byid",
             [str(item_id)],
             parameters,
+            MediaResultItem,
         )
     
     def update(
@@ -45,7 +47,7 @@ class Omnia:
         stream_type: StreamType,
         item_id: int,
         parameters: dict[str, str],
-    ):
+    ) -> Response[Any]:
         """
         Will update the general Metadata of a Media Item. Uses the Management API.
         """
@@ -55,7 +57,8 @@ class Omnia:
             ApiType.MANAGEMENT,
             "update",
             [str(item_id)],
-            parameters
+            parameters,
+            Any,
         )
 
     def upload_by_url(
@@ -64,7 +67,7 @@ class Omnia:
         url: str,
         use_queue: bool,
         filename: Optional[str] = None,
-    ):
+    ) -> Response[Any]:
         """
         will create a new Media Item of the given Streamtype, if the given
         urlParameter contains a valid Source for the given Streamtype.
@@ -81,7 +84,30 @@ class Omnia:
             ApiType.MANAGEMENT,
             "fromurl",
             [],
-            data
+            data,
+            Any,
+        )
+
+    def editable_attributes(
+        self,
+        stream_type: StreamType,
+    ) -> Response[EditableAttributesResponse]:
+        """
+        Lists all editable attributes for a given stream type. Documentation can be found here:
+        https://api.nexx.cloud/v3.1/system/editablerestrictionsfor/:streamtype
+        
+        This method is needed as there is no other documentation of all the available metadata
+        fields in omnia. Especially useful if you want to know which metadata attributes
+        you can alter using the `omnia.update` method.
+        """
+        return self.call(
+            "get",
+            stream_type,
+            ApiType.SYSTEM,
+            "editableattributesfor",
+            [stream_type.value],
+            {},
+            EditableAttributesResponse,
         )
 
     def call(
@@ -91,11 +117,12 @@ class Omnia:
         api_type: ApiType,
         operation: str,
         args: list[str],
-        parameters: dict[str, str]
-    ) -> Response:
-        """Generic call to the Omnia Media API. Won't work with the management API's."""
+        parameters: dict[str, str],
+        response_type: Type[ResponseType],
+    ) -> Response[ResponseType]:
+        """Generic call to the omnia API."""
         return self.__universal_call(
-            method, stream_type, api_type, operation, args, parameters
+            method, stream_type, api_type, operation, args, parameters, response_type
         )
 
     def __universal_call(
@@ -106,7 +133,8 @@ class Omnia:
         operation: str,
         args: list[str],
         parameters: dict[str, str],
-    ) -> Response:
+        response_type: Type[ResponseType],
+    ) -> Response[ResponseType]:
         args_str = "/".join(args)
         url: str = ""
         if api_type is ApiType.MEDIA:
@@ -131,8 +159,7 @@ class Omnia:
             url=url,
             data=parameters,
         )
-        print(result.json())
-        return Response.model_validate(result.json())
+        return Response[response_type].model_validate(result.json())
 
     def __request_header(
         self,
