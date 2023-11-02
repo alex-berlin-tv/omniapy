@@ -1,0 +1,14 @@
+[project]
+name = "omniapy"
+description = "API client for omnia by 3q nexx"
+version = "0.1.0"
+dependencies = [
+    "requests",
+    "pydantic",
+]
+
+[tool.setuptools]
+packages = ["omniapy"]
+
+[project.scripts]
+gaia = "omniapy:__main__.app"
