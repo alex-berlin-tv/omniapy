@@ -28,6 +28,7 @@ class StreamType(str, Enum):
     VIDEO = "videos"
     AUDIO = "audio"
     SHOW = "shows"
+    RADIO = "radio"
 
 
 class ApiType(str, Enum):
@@ -101,14 +102,14 @@ class MediaResultGeneral(BaseModel):
     genre_raw: Optional[str] = Field(None, alias="genre_raw")
     genre: Optional[str] = Field(None, alias="genre")
     content_moderation_aspects: str = Field(alias="contentModerationAspects")
-    uploaded: datetime = Field(alias="uploaded")
+    uploaded: Optional[datetime] = Field(None, alias="uploaded")
     created: datetime = Field(alias="created")
     audio_type: Optional[str] = Field(None, alias="audiotype")
-    runtime: str = Field(alias="runtime")
-    is_picked: Bool = Field(alias="isPicked")
-    for_kids: Bool = Field(alias="forKids")
+    runtime: Optional[str] = Field(None, alias="runtime")
+    is_picked: Optional[Bool] = Field(None, alias="isPicked")
+    for_kids: Optional[Bool] = Field(None, alias="forKids")
     is_pay: Bool = Field(alias="isPay")
-    is_ugc: Bool = Field(alias="isUGC")
+    is_ugc: Optional[Bool] = Field(None, alias="isUGC")
 
 
 class ManagementResult(BaseModel):
