@@ -29,6 +29,7 @@ class StreamType(str, Enum):
     AUDIO = "audio"
     SHOW = "shows"
     RADIO = "radio"
+    LIVE = "live"
 
 
 class ApiType(str, Enum):
